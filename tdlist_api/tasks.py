@@ -26,28 +26,21 @@ def get_hot_tasks():
 
 
 @app.task
-def print_all_tasks(tasks):
-    for task in tasks:
-        print(task.deadline)
-    print(f"All tasks: {tasks}")
-
-
-@app.task
-def send_telegram_message(task):
+def send_telegram_message(task: Task) -> None:
     chat_id = task.chat_id
-    print(f"CHAT_ID {chat_id}")
     msg = (f"Напоминаю о:\n"
-           f"<b>{task.title}</b>"
+           f"<b>{task.title}</b>\n"
            f"{task.description}")
 
     url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
     payload = {
         "chat_id": chat_id,
-        "text": msg
+        "text": msg,
+        "parse_mode": "HTML"
     }
     try:
         response = requests.post(url, json=payload)
-        response.raise_for_status()  # Raise an exception for bad status codes
+        response.raise_for_status()
         print(f"Сообщение отправлено: {response.json()}")
     except requests.exceptions.RequestException as e:
         print(f"Ошибка: {e}")
