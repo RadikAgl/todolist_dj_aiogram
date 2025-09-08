@@ -1,5 +1,6 @@
 from datetime import datetime
 
+from django.utils import timezone
 from rest_framework import viewsets, status, permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -59,7 +60,8 @@ class TaskViewSet(viewsets.ModelViewSet):
         data = request.data.get('data')
         tg_id = data['tg_id']
         categories = data.get('categories')
-        data['deadline'] = datetime.strptime(data['date'], '%Y-%m-%d %H:%M')
+        deadline = datetime.strptime(data['date'], '%Y-%m-%d %H:%M')
+        data['deadline'] = timezone.make_aware(deadline, timezone.get_current_timezone())
         user = TGUser.objects.get(tg_id=int(tg_id))
         serializer = TaskCreateSerializer(data=data)
 

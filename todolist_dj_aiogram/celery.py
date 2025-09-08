@@ -12,8 +12,7 @@ app.conf.imports = ['tdlist_api.tasks']
 
 app.conf.beat_schedule = {
     'every': {
-        'task': 'todolist_dj_aiogram.tasks.repeat_order_make',
-        'schedule': crontab(),# по умолчанию выполняет каждую минуту, очень гибко
-    },                                                              # настраивается
-
+        'task': 'tdlist_api.tasks.get_hot_tasks',
+        'schedule': crontab(),
+    },
 }
