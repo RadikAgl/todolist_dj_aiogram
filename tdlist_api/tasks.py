@@ -43,7 +43,8 @@ def send_telegram_message(task):
     url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
     payload = {
         "chat_id": chat_id,
-        "text": msg
+        "text": msg,
+        "parse_mode": "HTML"
     }
     try:
         response = requests.post(url, json=payload)
