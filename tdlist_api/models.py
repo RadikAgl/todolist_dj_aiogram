@@ -1,7 +1,7 @@
 import uuid
 
 from django.contrib.auth.base_user import BaseUserManager
-from django.contrib.auth.models import AbstractBaseUser
+from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from django.db import models
 from django.utils import timezone
 
@@ -18,25 +18,41 @@ class BaseModel(models.Model):
 
 
 class UserManager(BaseUserManager):
-    def _create_user(self, tg_id, **extra_fields):
+    def _create_user(self, tg_id, password=None, **extra_fields):
         if not tg_id:
             raise ValueError('The tg_id must be set')
         user = self.model(tg_id=tg_id)
-        user.set_unusable_password()
+        is_staff = extra_fields.get('is_staff', False)
+        if is_staff:
+            user.is_staff = True
+            user.is_superuser = True
+            user.set_password(password)
+        else:
+            user.set_unusable_password()
         user.save()
 
         return user
 
     def create_superuser(self, **extra_fields):
+        extra_fields.setdefault('is_staff', True)
+        extra_fields.setdefault('is_superuser', True)
+        extra_fields.setdefault('is_active', True)
+
+        if extra_fields.get('is_staff') is not True:
+            raise ValueError('Superuser must have is_staff=True.')
+        if extra_fields.get('is_superuser') is not True:
+            raise ValueError('Superuser must have is_superuser=True.')
         return self._create_user(**extra_fields)
 
 
-
-class TGUser(BaseModel, AbstractBaseUser):
+class TGUser(BaseModel, AbstractBaseUser, PermissionsMixin):
     """
     Модель пользователя
     """
     tg_id = models.BigIntegerField(unique=True, db_index=True, verbose_name='Telegram ID')
+    is_staff = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
+    is_superuser = models.BooleanField(default=False)
 
     objects = UserManager()
 
