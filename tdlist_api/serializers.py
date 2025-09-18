@@ -24,7 +24,7 @@ class TaskCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Task
-        fields = ('title', 'chat_id', 'description', 'deadline')
+        fields = ('title', 'chat_id', 'description', 'deadline', 'is_done')
 
 
 class TaskListSerializer(serializers.ModelSerializer):
