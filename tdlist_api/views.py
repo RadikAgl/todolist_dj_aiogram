@@ -38,6 +38,25 @@ class CategoryViewSet(viewsets.ModelViewSet):
     serializer_class = CategorySerializer
     permission_classes = [permissions.IsAuthenticated]
 
+    def get_queryset(self):
+        queryset = Category.objects.all()
+        tg_id = self.request.query_params.get('tg_id')
+        if tg_id:
+            queryset = queryset.filter(user__tg_id=tg_id)
+        return queryset
+
+    def create(self, request, *args, **kwargs):
+        data = request.data.get('data')
+        tg_id = data['tg_id']
+        user = TGUser.objects.get(tg_id=int(tg_id))
+        serializer = CategorySerializer(data=data)
+        if serializer.is_valid():
+            serializer.save(user=user)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 class TaskViewSet(viewsets.ModelViewSet):
     queryset = Task.objects.filter(is_done=False)
@@ -45,11 +64,11 @@ class TaskViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        queryset = Task.objects.filter(is_done=False)
+        queryset = Task.objects.all().filter(is_done=False)
         tg_id = self.request.query_params.get('tg_id')
-        category = self.request.query_params.get('category')
-        if tg_id is not None:
+        if tg_id:
             queryset = queryset.filter(user__tg_id=tg_id)
+        category = self.request.query_params.get('category')
         if category:
             category = Category.objects.get(id=category)
             queryset = queryset.filter(categories=category)
@@ -81,8 +100,10 @@ class TaskViewSet(viewsets.ModelViewSet):
     def partial_update(self, request, *args, **kwargs):
         partial = True
         data = request.data
-        categories = data['categories']
-        data['deadline'] = datetime.strptime(data['date'], '%Y-%m-%d %H:%M')
+        categories = data.get('categories')
+        date = data.get('date')
+        if date:
+            data['deadline'] = datetime.strptime(date, '%Y-%m-%d %H:%M')
         instance = self.get_object()
         serializer = TaskCreateSerializer(instance, data=data, partial=partial)
 
@@ -93,6 +114,7 @@ class TaskViewSet(viewsets.ModelViewSet):
             if categories:
                 user = TGUser.objects.get(tg_id=int(data['tg_id']))
                 task = Task.objects.get(id=data['task_id'])
+                task.categories.clear()
                 add_categories_to_task(user, task, categories)
 
             return Response(serializer.data, status=status.HTTP_200_OK)
@@ -101,15 +123,12 @@ class TaskViewSet(viewsets.ModelViewSet):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-def get_category_objs(category_names, user):
+def get_category_objs(categories, user):
     res = []
-    for category in category_names.replace(' ', '').split(','):
-        cats = Category.objects.filter(name__iexact=category, user=user)
+    for category in categories:
+        cats = Category.objects.filter(id=category, user=user)
         if cats:
             res.extend(cats)
-        else:
-            cat = Category.objects.create(name=category.lower().capitalize(), user=user)
-            res.append(cat)
     return res
 
 

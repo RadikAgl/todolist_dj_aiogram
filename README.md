@@ -1,6 +1,17 @@
 # ToDoList
 Проект Telegram-бота для создания списка задач. Реализован функционал напоминания в указанное время. 
 
+В проекте использованы:
+* aiogram v3
+* aiogram_dialog
+* Django
+* djangorestframework
+* PostgreSQL
+* JWT
+* Celery
+* Redis
+* Docker
+
 
 ### Запуск 
 
