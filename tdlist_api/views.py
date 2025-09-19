@@ -3,35 +3,10 @@ from datetime import datetime
 from django.utils import timezone
 from rest_framework import viewsets, status, permissions
 from rest_framework.response import Response
-from rest_framework.views import APIView
-from rest_framework_simplejwt.tokens import RefreshToken
+
 
 from .models import TGUser, Category, Task
 from .serializers import CategorySerializer, TaskCreateSerializer, TaskListSerializer
-
-from .authentication import MyJWTAuthentication
-
-
-class TelegramAuthView(APIView):
-    authentication_classes = (MyJWTAuthentication,)
-
-    def post(self, request):
-        telegram_id = request.data.get('tg_id')
-
-        if not telegram_id:
-            return Response({'error': 'Нужно указать Telegram ID'}, status=status.HTTP_400_BAD_REQUEST)
-
-        user, created = TGUser.objects.get_or_create(
-            tg_id=telegram_id
-        )
-
-        refresh = RefreshToken.for_user(user)
-
-        return Response({
-            'refresh': str(refresh),
-            'access': str(refresh.access_token),
-        })
-
 
 class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all()
@@ -42,13 +17,14 @@ class CategoryViewSet(viewsets.ModelViewSet):
         queryset = Category.objects.all()
         tg_id = self.request.query_params.get('tg_id')
         if tg_id:
-            queryset = queryset.filter(user__tg_id=tg_id)
+            user, _ = TGUser.objects.get_or_create(tg_id=int(tg_id))
+            queryset = queryset.filter(user=user)
         return queryset
 
     def create(self, request, *args, **kwargs):
         data = request.data.get('data')
         tg_id = data['tg_id']
-        user = TGUser.objects.get(tg_id=int(tg_id))
+        user, created = TGUser.objects.get_or_create(tg_id=int(tg_id))
         serializer = CategorySerializer(data=data)
         if serializer.is_valid():
             serializer.save(user=user)
@@ -67,7 +43,8 @@ class TaskViewSet(viewsets.ModelViewSet):
         queryset = Task.objects.all().filter(is_done=False)
         tg_id = self.request.query_params.get('tg_id')
         if tg_id:
-            queryset = queryset.filter(user__tg_id=tg_id)
+            user, _ = TGUser.objects.get_or_create(tg_id=int(tg_id))
+            queryset = queryset.filter(user=user)
         category = self.request.query_params.get('category')
         if category:
             category = Category.objects.get(id=category)
@@ -81,7 +58,7 @@ class TaskViewSet(viewsets.ModelViewSet):
         categories = data.get('categories')
         deadline = datetime.strptime(data['date'], '%Y-%m-%d %H:%M')
         data['deadline'] = timezone.make_aware(deadline, timezone.get_current_timezone())
-        user = TGUser.objects.get(tg_id=int(tg_id))
+        user, created = TGUser.objects.get_or_create(tg_id=int(tg_id))
         serializer = TaskCreateSerializer(data=data)
 
         if serializer.is_valid():

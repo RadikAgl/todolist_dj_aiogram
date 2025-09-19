@@ -29,7 +29,7 @@ services:
       - .:/usr/src/app/${PROJECT_NAME:-web}
     environment:
       - TZ=America/Adak
-    command: sh -c "python manage.py makemigrations && python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
+    command: sh -c "python manage.py makemigrations && python manage.py migrate && python manage.py runserver 0.0.0.0:8000 && python manage.py create_bot_user"
     ports:
       - 8000:8000
     restart: always

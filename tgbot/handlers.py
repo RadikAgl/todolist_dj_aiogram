@@ -18,7 +18,7 @@ from aiogram_dialog.widgets.text import Const, Format, Case
 
 from tgbot.data_exchanger import (list_tasks, auth_user, get_categories, add_task, delete_task, get_task, update_task,
                                   delete_category, update_category, create_category, get_category)
-from tgbot.utils import user_tokens, FAILURE_MESSAGE
+from tgbot.utils import FAILURE_MESSAGE
 from tgbot.states import MainDialogSG, CreateTaskSG, CategoriesSG, CreateCategorySG, TasksSG
 
 logger = logging.getLogger(__name__)
@@ -250,6 +250,10 @@ create_task_dialog = Dialog(
             on_success=on_success_handler,
             type_factory=time_type_factory,
         ),
+        Row(
+            Back(Const("Назад")),
+            Cancel(Const("Отмена")),
+        ),
         state=CreateTaskSG.time
     ),
     Window(
@@ -337,7 +341,8 @@ async def get_category_data(dialog_manager: DialogManager, **kwargs):
         }
 
     else:
-        return {"is_success": False}
+        await dialog_manager.event.answer(FAILURE_MESSAGE, show_alert=True)
+        await dialog_manager.done()
 
 
 async def on_deleting_category(callback: CallbackQuery, button: Button,
@@ -430,10 +435,12 @@ async def get_tasks_data(dialog_manager: DialogManager, **kwargs):
         res = True if tasks else False
         for task in tasks:
             buttons.append((task["title"], task["id"]))
+        return {"tasks": buttons, "count": len(buttons), "is_success": res}
     else:
-        res = False
+        await dialog_manager.event.answer(FAILURE_MESSAGE, show_alert=True)
+        await dialog_manager.done()
 
-    return {"tasks": buttons, "count": len(buttons), "is_success": res}
+
 
 
 select_widget = Select(
@@ -508,7 +515,8 @@ async def get_task_data(dialog_manager: DialogManager, **kwargs):
         }
 
     else:
-        return {"is_success": False}
+        await dialog_manager.event.answer(FAILURE_MESSAGE, show_alert=True)
+        await dialog_manager.done()
 
 
 tasks_dialog = Dialog(
@@ -569,16 +577,7 @@ async def cmd_cancel(message: types.Message, state: FSMContext):
 async def cmd_start(message: types.Message, state: FSMContext, dialog_manager: DialogManager):
     await state.clear()
     await state.set_state()
-    user_id = message.from_user.id
-    response = await auth_user(user_id)
-    if response["status"] == 200:
-        data = response["json"]
-
-        user_tokens.set_tokens(user_id, data["access"], data["refresh"])
-
-        await message.answer(
-            "Вы успешно авторизованы!"
+    await message.answer(
+            "Приветствую"
         )
-        await dialog_manager.start(MainDialogSG.main, mode=StartMode.RESET_STACK)
-    else:
-        await message.answer("Не удалось авторизоваться. Попробуйте позже.")
+    await dialog_manager.start(MainDialogSG.main, mode=StartMode.RESET_STACK)

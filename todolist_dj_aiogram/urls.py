@@ -19,7 +19,7 @@ from django.urls import path, include
 from rest_framework import routers
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenVerifyView, TokenRefreshView
 
-from tdlist_api.views import CategoryViewSet, TaskViewSet, TelegramAuthView
+from tdlist_api.views import CategoryViewSet, TaskViewSet
 
 router = routers.DefaultRouter()
 router.register(r'categories', CategoryViewSet)
@@ -31,5 +31,5 @@ urlpatterns = [
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/verify/', TokenVerifyView.as_view(), name='token_verify'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
-    path('api/telegram/auth/', TelegramAuthView.as_view(), name='telegram_auth'),
+    # path('api/telegram/auth/', TelegramAuthView.as_view(), name='telegram_auth'),
 ]
