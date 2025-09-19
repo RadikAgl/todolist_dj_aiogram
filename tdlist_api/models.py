@@ -11,6 +11,9 @@ class BaseModel(models.Model):
     id = models.CharField(max_length=36, primary_key=True, editable=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        abstract = True
+
     def save(self, *args, **kwargs):
         if not self.id:
             timestamp_str = timezone.now().strftime("%Y%m%d%H%M%S%f")
@@ -18,47 +21,47 @@ class BaseModel(models.Model):
         super().save(*args, **kwargs)
 
 
-class UserManager(BaseUserManager):
-    def _create_user(self, tg_id, password=None, **extra_fields):
-        if not tg_id:
-            raise ValueError('The tg_id must be set')
-        user = self.model(tg_id=tg_id)
-        is_staff = extra_fields.get('is_staff', False)
-        if is_staff:
-            user.is_staff = True
-            user.is_superuser = True
-            user.set_password(password)
-        else:
-            user.set_unusable_password()
-        user.save()
+# class UserManager(BaseUserManager):
+#     def _create_user(self, tg_id, password=None, **extra_fields):
+#         if not tg_id:
+#             raise ValueError('The tg_id must be set')
+#         user = self.model(tg_id=tg_id)
+#         is_staff = extra_fields.get('is_staff', False)
+#         if is_staff:
+#             user.is_staff = True
+#             user.is_superuser = True
+#             user.set_password(password)
+#         else:
+#             user.set_unusable_password()
+#         user.save()
+#
+#         return user
 
-        return user
-
-    def create_superuser(self, **extra_fields):
-        extra_fields.setdefault('is_staff', True)
-        extra_fields.setdefault('is_superuser', True)
-        extra_fields.setdefault('is_active', True)
-
-        if extra_fields.get('is_staff') is not True:
-            raise ValueError('Superuser must have is_staff=True.')
-        if extra_fields.get('is_superuser') is not True:
-            raise ValueError('Superuser must have is_superuser=True.')
-        return self._create_user(**extra_fields)
+    # def create_superuser(self, **extra_fields):
+    #     extra_fields.setdefault('is_staff', True)
+    #     extra_fields.setdefault('is_superuser', True)
+    #     extra_fields.setdefault('is_active', True)
+    #
+    #     if extra_fields.get('is_staff') is not True:
+    #         raise ValueError('Superuser must have is_staff=True.')
+    #     if extra_fields.get('is_superuser') is not True:
+    #         raise ValueError('Superuser must have is_superuser=True.')
+    #     return self._create_user(**extra_fields)
 
 
-class TGUser(BaseModel, AbstractBaseUser, PermissionsMixin):
+class TGUser(BaseModel):
     """
     Модель пользователя
     """
     tg_id = models.BigIntegerField(unique=True, db_index=True, verbose_name='Telegram ID')
-    is_staff = models.BooleanField(default=False)
-    is_active = models.BooleanField(default=True)
-    is_superuser = models.BooleanField(default=False)
+    # is_staff = models.BooleanField(default=False)
+    # is_active = models.BooleanField(default=True)
+    # is_superuser = models.BooleanField(default=False)
 
-    objects = UserManager()
+    # objects = UserManager()
 
-    USERNAME_FIELD = 'tg_id'
-    REQUIRED_FIELDS = []
+    # USERNAME_FIELD = 'tg_id'
+    # REQUIRED_FIELDS = []
 
     def __str__(self):
         return f"{self.tg_id} (ID: {self.id})"

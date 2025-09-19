@@ -1,3 +1,4 @@
+import json
 import logging
 from datetime import datetime
 from typing import Any
@@ -8,7 +9,7 @@ from aiohttp import connector
 
 TASKS_URL = 'http://web:8000/api/tasks/'
 CATEGORIES_URL = 'http://web:8000/api/categories/'
-USER_AUTH_URL = 'http://web:8000/api/telegram/auth/'
+API_TOKENS_URL = 'http://web:8000/api/token/'
 ACCESS_TOKEN_REFRESH_URL = 'http://web:8000/api/token/refresh/'
 ACCESS_TOKEN_VERIFY_URL = 'http://web:8000/api/token/verify/'
 
@@ -121,10 +122,19 @@ async def update_task(headers: dict, data: dict):
         logger.error(f"{datetime.now()} {e}")
 
 
-async def auth_user(user_id: int):
+async def auth_user(username: str, password: str):
     try:
+        data = {
+            "username": username,
+            "password": password
+        }
+        headers = {
+            "Content-Type": "application/json"
+        }
         async with aiohttp.ClientSession() as session:
-            async with session.post(USER_AUTH_URL, json={'tg_id': user_id}) as response:
+            async with session.post(API_TOKENS_URL,
+                                    data=json.dumps(data),
+                                    headers=headers) as response:
                 return {
                     'status': response.status,
                     'json': await response.json()
