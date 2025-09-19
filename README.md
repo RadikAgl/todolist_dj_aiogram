@@ -28,4 +28,4 @@
    docker-compose exec web python manage.py createsuperuser
    ```
 
-И следйуте указаниям.
+И следуйте указаниям.
