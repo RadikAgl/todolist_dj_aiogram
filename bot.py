@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import os
+from logging.handlers import RotatingFileHandler
 
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
@@ -53,6 +54,11 @@ async def main():
 
 
 if __name__ == "__main__":
-    logging.basicConfig(filename='tgbot/logs/bot.log', level=logging.INFO)
+    handler = RotatingFileHandler("tgbot/logs/bot.log", maxBytes=1024 * 1024, backupCount=3, encoding="utf-8")
+    formatter = logging.Formatter("%(asctime)s [%(levelname)s] %(name)s: %(message)s")
+    handler.setFormatter(formatter)
+    logger = logging.getLogger()
+    logger.setLevel(logging.INFO)
+    logger.addHandler(handler)
     asyncio.run(main())
 
