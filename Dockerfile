@@ -1,24 +1,24 @@
-# pull official base image
-FROM python:3.10-slim-buster
+FROM python:3.10-slim
 
-# set work directory
-WORKDIR /usr/src/app
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1
 
-# set environment variables
-ENV PYTHONDONTWRITEBYTECODE 1
-ENV PYTHONUNBUFFERED 1
+WORKDIR /app
 
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
 
-# install dependencies
-RUN pip install --upgrade pip
-COPY requirements.txt /usr/src/app/requirements.txt
-RUN pip install -r requirements.txt
+# Зависимости проекта
+COPY requirements.txt .
+RUN pip install --upgrade pip && pip install -r requirements.txt
 
-# copy entrypoint.sh
-COPY entrypoint.sh /usr/src/app/entrypoint.sh
+# Исходники
+COPY . .
+COPY wait_for_migrations.sh /app/wait_for_migrations.sh
+RUN sed -i 's/\r$//' /app/wait_for_migrations.sh && chmod 755 /app/wait_for_migrations.sh
 
-# copy project
-COPY . /usr/src/app/
-
-# run entrypoint.sh
-ENTRYPOINT ["/usr/src/app/entrypoint.sh"]
+# Нерутовый пользователь
+RUN useradd -m appuser && chown -R appuser:appuser /app
+USER appuser
