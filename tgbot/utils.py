@@ -8,7 +8,7 @@ load_dotenv(os.path.join(".", ".env"))
 PASSWORD = os.getenv('BOT_PASSWORD')
 USERNAME = os.getenv('BOT_USERNAME')
 
-FAILURE_MESSAGE = "Что-то пошло не так. Уже решаем проблему, попробуйте еще раз чуть позднее"
+FAILURE_MESSAGE = "❗️ Что-то пошло не так. Уже решаем проблему, попробуйте еще раз чуть позднее ❗️"
 
 
 class APIClient:

@@ -12,9 +12,10 @@ from aiogram.fsm.storage.redis import RedisStorage
 from aiogram_dialog import setup_dialogs
 from dotenv import load_dotenv
 
+from tgbot.dialogs.categories import create_category_dialog, categories_dialog
+from tgbot.dialogs.tasks import create_task_dialog, tasks_dialog
 from tgbot.middleware import AuthMiddleware
-from tgbot.handlers import router, main_dialog, create_task_dialog, create_category_dialog, categories_dialog, \
-    tasks_dialog
+from tgbot.handlers import router, main_dialog
 
 load_dotenv(os.path.join("", ".env"))
 
@@ -28,11 +29,13 @@ bot = Bot(
         )
     )
 
-REDIS_URL = os.getenv("REDIS_URL")
+USE_REDIS = os.getenv("USE_REDIS")
 
-
-storage = RedisStorage.from_url(REDIS_URL, key_builder=DefaultKeyBuilder(with_destiny=True))
-
+if USE_REDIS:
+    REDIS_URL = os.getenv("REDIS_URL")
+    storage = RedisStorage.from_url(REDIS_URL, key_builder=DefaultKeyBuilder(with_destiny=True))
+else:
+    storage = MemoryStorage()
 
 # Диспетчер
 dp = Dispatcher(storage=storage)
@@ -61,4 +64,3 @@ if __name__ == "__main__":
     logger.setLevel(logging.INFO)
     logger.addHandler(handler)
     asyncio.run(main())
-
