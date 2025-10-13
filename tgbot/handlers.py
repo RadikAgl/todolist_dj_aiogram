@@ -17,7 +17,7 @@ from aiogram_dialog.widgets.kbd import Button, Start, Row, Back, Next, Cancel, S
 from aiogram_dialog.widgets.text import Const, Format, Case
 
 from tgbot.data_exchanger import (list_tasks, auth_user, get_categories, add_task, delete_task, get_task, update_task,
-                                  delete_category, update_category, create_category, get_category)
+                                  delete_category, update_category, add_category, get_category)
 from tgbot.utils import FAILURE_MESSAGE
 from tgbot.states import MainDialogSG, CreateTaskSG, CategoriesSG, CreateCategorySG, TasksSG
 
@@ -285,7 +285,11 @@ async def add_new_category(
         manager: DialogManager,
         text: str,
 ):
-    category_id = manager.start_data.get('category_id')
+    category_id = None
+    try:
+        category_id = manager.start_data.get('category_id')
+    except AttributeError:
+        pass
     headers = manager.middleware_data.get('headers')
     data = {
         "name": text,
@@ -295,7 +299,7 @@ async def add_new_category(
     if category_id:
         response = await update_category(headers, category_id, data)
     else:
-        response = await create_category(headers, data)
+        response = await add_category(headers, data)
     try:
         if response["status"] == 200:
             msg = "Категория обновлена!"

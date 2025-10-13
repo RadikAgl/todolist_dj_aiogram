@@ -3,9 +3,7 @@ version: '3.9'
 services:
   bot:
     container_name: ${PROJECT_NAME}-bot
-    build:
-      dockerfile: Dockerfile.bot
-      context: .
+    build: .
     working_dir: "/usr/src/app/${BOT_NAME:-tg_bot}"
     volumes:
       - .:/usr/src/app/${BOT_NAME:-bot}
@@ -21,21 +19,22 @@ services:
 
   web:
     container_name: ${PROJECT_NAME}-web
-    build:
-      dockerfile: Dockerfile.web
-      context: .
-    working_dir: "/usr/src/app/${PROJECT_NAME:-web}"
+    build: .
     volumes:
-      - .:/usr/src/app/${PROJECT_NAME:-web}
+      - .:/app/
     environment:
       - TZ=America/Adak
-    command: sh -c "python manage.py makemigrations && python manage.py migrate && python manage.py runserver 0.0.0.0:8000 && python manage.py create_bot_user"
+    entrypoint: ["/app/wait_for_migrations.sh"]
+    command: sh -c "python manage.py create_bot_user && python manage.py runserver 0.0.0.0:8000"
     ports:
       - 8000:8000
     restart: always
     depends_on:
-      - db
-      - redis
+      db:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+
     env_file: .env
 
   db:
@@ -49,6 +48,11 @@ services:
     env_file: .env
     ports:
       - 5439:5432
+    healthcheck:
+      test: [ "CMD-SHELL","pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB" ]
+      interval: 5s
+      timeout: 3s
+      retries: 20
 
   redis:
     container_name: ${PROJECT_NAME}-redis
@@ -68,22 +72,10 @@ services:
 
   celery:
     build: .
+    entrypoint: ["/app/wait_for_migrations.sh"]
     command: celery -A todolist_dj_aiogram worker -l info
     volumes:
-      - .:/usr/src/app/
-    environment:
-      - SECRET_KEY=${SECRET_KEY}
-      - DEBUG=1
-      - DJANGO_ALLOWED_HOSTS=localhost 127.0.0.1 [::1]
-      - TZ=America/Adak
-    depends_on:
-      - redis
-      - web
-  celery-beat:
-    build: .
-    command: celery -A todolist_dj_aiogram beat -l info
-    volumes:
-      - .:/usr/src/app/
+      - .:/app/
     environment:
       - SECRET_KEY=${SECRET_KEY}
       - DEBUG=1
@@ -93,6 +85,32 @@ services:
       - redis
       - web
 
+  celery-beat:
+    build: .
+    entrypoint: ["/app/wait_for_migrations.sh"]
+    command: celery -A todolist_dj_aiogram beat -l info
+    volumes:
+      - .:/app/
+    environment:
+      - SECRET_KEY=${SECRET_KEY}
+      - DEBUG=1
+      - DJANGO_ALLOWED_HOSTS=localhost 127.0.0.1 [::1]
+      - TZ=America/Adak
+    depends_on:
+      - redis
+      - web
+
+  migrate:
+    build: .
+    command: >
+      sh -c "
+      python manage.py makemigrations &&
+      python manage.py migrate --noinput
+      "
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: "no"
 
 volumes:
   postgres_data:
