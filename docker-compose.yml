@@ -1,12 +1,10 @@
-version: '3.9'
-
 services:
   bot:
-    container_name: ${PROJECT_NAME}-bot
+    container_name: tdlist-bot
     build: .
-    working_dir: "/usr/src/app/${BOT_NAME:-tg_bot}"
+#    working_dir: app/tg_bot
     volumes:
-      - .:/usr/src/app/${BOT_NAME:-bot}
+      - .:/usr/src/app/bot
     environment:
       - TZ=America/Adak
     command: python bot.py
@@ -18,7 +16,7 @@ services:
     env_file: .env
 
   web:
-    container_name: ${PROJECT_NAME}-web
+    container_name: tdlist-web
     build: .
     volumes:
       - .:/app/
@@ -42,7 +40,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     restart: always
-    container_name: ${PROJECT_NAME}-db
+    container_name: db
     environment:
       - TZ=America/Adak
     env_file: .env
@@ -55,7 +53,7 @@ services:
       retries: 20
 
   redis:
-    container_name: ${PROJECT_NAME}-redis
+    container_name: tdlist-redis
     image: redis:7.2-rc3-alpine
     restart: always
     environment:

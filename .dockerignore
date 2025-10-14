@@ -1,0 +1,17 @@
+.git
+pycache/
+*.pyc
+*.pyo
+*.log
+.env.*
+.vscode
+.idea
+dist/
+build/
+venv/
+.eggs/
+.mypy_cache/
+.pytest_cache/
+.coverage
+Dockerfile*
+docker-compose*.yml

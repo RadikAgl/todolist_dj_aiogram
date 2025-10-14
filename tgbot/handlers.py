@@ -57,3 +57,17 @@ async def cmd_start(message: types.Message, state: FSMContext, dialog_manager: D
         "Чтобы начать воспользуйся меню ниже!"
     )
     await dialog_manager.start(MainDialogSG.main, mode=StartMode.RESET_STACK)
+
+
+@router.message(Command("home"))
+async def cmd_home(message: types.Message, state: FSMContext, dialog_manager: DialogManager):
+    await dialog_manager.start(MainDialogSG.main, mode=StartMode.RESET_STACK)
+
+
+@router.message(Command("help"))
+async def cmd_help(message: types.Message, state: FSMContext, dialog_manager: DialogManager):
+    await message.answer(
+        "/home - основное меню\n "
+        "/cancel - отмена всех действий\n"
+        "/start - перезапуск бота"
+    )
