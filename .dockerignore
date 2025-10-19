@@ -2,7 +2,6 @@
 pycache/
 *.pyc
 *.pyo
-*.log
 .env.*
 .vscode
 .idea

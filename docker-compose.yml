@@ -2,9 +2,8 @@ services:
   bot:
     container_name: tdlist-bot
     build: .
-#    working_dir: app/tg_bot
     volumes:
-      - .:/usr/src/app/bot
+      - .:/app
     environment:
       - TZ=America/Adak
     command: python bot.py
@@ -19,7 +18,7 @@ services:
     container_name: tdlist-web
     build: .
     volumes:
-      - .:/app/
+      - .:/app
     environment:
       - TZ=America/Adak
     entrypoint: ["/app/wait_for_migrations.sh"]
@@ -64,8 +63,8 @@ services:
       - ${REDIS_PORT}:${REDIS_PORT}
     expose:
       - ${REDIS_PORT}
-    volumes:
-      - ./redis.conf:/usr/local/etc/redis/redis.conf
+#    volumes:
+#      - ./redis.conf:/usr/local/etc/redis/redis.conf
 
 
   celery:
@@ -76,8 +75,6 @@ services:
       - .:/app/
     environment:
       - SECRET_KEY=${SECRET_KEY}
-      - DEBUG=1
-      - DJANGO_ALLOWED_HOSTS=localhost 127.0.0.1 [::1]
       - TZ=America/Adak
     depends_on:
       - redis
@@ -91,8 +88,6 @@ services:
       - .:/app/
     environment:
       - SECRET_KEY=${SECRET_KEY}
-      - DEBUG=1
-      - DJANGO_ALLOWED_HOSTS=localhost 127.0.0.1 [::1]
       - TZ=America/Adak
     depends_on:
       - redis
@@ -112,4 +107,3 @@ services:
 
 volumes:
   postgres_data:
-  redis_data:

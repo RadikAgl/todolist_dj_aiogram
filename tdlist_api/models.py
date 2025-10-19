@@ -9,7 +9,7 @@ from django.utils import timezone
 
 class BaseModel(models.Model):
     id = models.CharField(max_length=36, primary_key=True, editable=False)
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="время создания")
 
     class Meta:
         abstract = True
@@ -47,7 +47,7 @@ class Category(BaseModel):
 class Task(BaseModel):
     """Модель задач"""
     user = models.ForeignKey(TGUser, on_delete=models.CASCADE)
-    chat_id = models.BigIntegerField(verbose_name='Идентификатор чата')
+    chat_id = models.BigIntegerField(verbose_name='идентификатор чата')
     title = models.CharField(max_length=100, verbose_name="название задачи")
     description = models.TextField(verbose_name="описание задачи", blank=True, null=True)
     categories = models.ManyToManyField(Category, related_name="task", verbose_name="категория", blank=True)
