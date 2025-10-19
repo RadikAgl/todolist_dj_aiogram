@@ -19,6 +19,6 @@ COPY . .
 COPY wait_for_migrations.sh /app/wait_for_migrations.sh
 RUN sed -i 's/\r$//' /app/wait_for_migrations.sh && chmod 755 /app/wait_for_migrations.sh
 
-# Нерутовый пользователь
-RUN useradd -m appuser && chown -R appuser:appuser /app
-USER appuser
+## Нерутовый пользователь
+#RUN useradd -m appuser && chown -R appuser:appuser /app
+#USER appuser

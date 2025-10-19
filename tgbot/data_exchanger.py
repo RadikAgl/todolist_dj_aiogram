@@ -68,8 +68,6 @@ async def request(
         return {'status': 'connection_error', 'error': str(e)}
 
 
-# ************** БИЗНЕС-ФУНКЦИИ *********************
-
 @log_async
 async def list_tasks(headers: dict, user_id: int | None = None, category: str | None = None):
     params = {}
@@ -92,12 +90,12 @@ async def delete_task(headers: dict, task_id: str):
 
 @log_async
 async def add_task(headers: dict, data: dict[str, Any]):
-    return await request('POST', TASKS_URL, headers=headers, json_data={'data': data})
+    return await request('POST', TASKS_URL, headers=headers, json_data=data)
 
 
 @log_async
 async def update_task(headers: dict, data: dict):
-    task_id = data.get('task_id') or data.get("id")
+    task_id = data.get('task_id')
     return await request('PATCH', f"{TASKS_URL}{task_id}/", headers=headers, json_data=data)
 
 
@@ -113,7 +111,7 @@ async def get_category(headers: dict, category_id: str):
 
 @log_async
 async def add_category(headers: dict, data: dict[str, Any]):
-    return await request('POST', CATEGORIES_URL, headers=headers, json_data={'data': data})
+    return await request('POST', CATEGORIES_URL, headers=headers, json_data=data)
 
 
 @log_async

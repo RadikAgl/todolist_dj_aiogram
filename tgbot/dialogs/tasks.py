@@ -2,7 +2,7 @@ import logging
 import operator
 import re
 from datetime import date, datetime
-from typing import Any
+from typing import Any, Union
 
 from aiogram.types import CallbackQuery, Message
 from aiogram_dialog import Dialog, Window, DialogManager
@@ -19,6 +19,33 @@ from tgbot.utils import FAILURE_MESSAGE
 
 logger = logging.getLogger(__name__)
 
+ISO_MICROS_RE = re.compile(r'(\.\d{6})\d+')
+
+
+def _to_datetime(value: Union[str, datetime]) -> datetime:
+    """
+    Принимает datetime или ISO-строку и возвращает datetime.
+    Поддерживает 'Z' и лишние цифры микросекунд.
+    """
+    if isinstance(value, datetime):
+        return value
+    s = str(value).strip()
+    if not s:
+        raise ValueError("empty datetime value")
+    if s.endswith('Z'):
+        s = s[:-1] + '+00:00'
+    s = ISO_MICROS_RE.sub(r'\1', s)
+    # fromisoformat понимает: 2025-10-17T15:35:00+03:00 и без микросекунд
+    return datetime.fromisoformat(s)
+
+
+def get_time(value: Union[str, datetime]) -> str:
+    """
+    Без конвертации часового пояса. Просто форматируем в 'YYYY-MM-DD HH:MM'.
+    """
+    dt = _to_datetime(value)
+    return dt.strftime('%Y-%m-%d %H:%M')
+
 
 async def get_task_data(dialog_manager: DialogManager, **kwargs):
     task_id = dialog_manager.dialog_data.get('task_id')
@@ -30,10 +57,9 @@ async def get_task_data(dialog_manager: DialogManager, **kwargs):
         return {
             "title": task["title"],
             "description": task["description"],
-            "categories": ", ".join([item["name"] for item in task["categories"]]) if task["categories"] else "Без "
-                                                                                                              "категории",
-            "deadline": task["deadline"],
-            "created_at": task["created_at"],
+            "categories": ", ".join(task["categories"]) if task["categories"] else "Без категории",
+            "deadline": get_time(task["deadline"]),
+            "created_at": get_time(task["created_at"]),
             "is_success": res
         }
 
@@ -139,13 +165,13 @@ tasks_dialog = Dialog(
         Case(
             {
                 True: Format(
-                    "Название: {title}\n"
-                    "Описание: {description}\n"
-                    "Категории: {categories}\n"
-                    "Создано: {created_at}\n"
-                    "Напомнить: {deadline}\n"
+                    "<b>📝 {title}</b>\n"
+                    "<i>{description}</i>\n"
+                    "🏷️ Категории: {categories}\n"
+                    "🗓️ Создано: {created_at}\n"
+                    "⏰ Напомнить: {deadline}\n"
                 ),
-                False: Const("❗️ Проблемы на сервере, уже решаем проблему. Попробуйте еще раз чуть позже.")
+                False: Const(FAILURE_MESSAGE)
             },
             selector="is_success"
         ),
@@ -249,10 +275,10 @@ async def on_task_confirmed(callback: CallbackQuery, button: Button,
                             manager: DialogManager):
     data = await get_dialog_data(manager)
     is_editing = manager.start_data.get("is_editing")
-    headers = manager.middleware_data.get('headers')
+    headers = manager.middleware_data.get("headers")
     data["tg_id"] = manager.event.from_user.id
     data["chat_id"] = manager.event.message.chat.id
-    data["date"] += f" {data['time']}"
+    data["deadline"] = f"{data['date']} {data['time']}"
     if is_editing:
         data['task_id'] = manager.start_data.get('task_id')
         response = await update_task(headers, data)
