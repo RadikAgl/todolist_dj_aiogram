@@ -6,6 +6,7 @@
 * aiogram_dialog
 * Django
 * djangorestframework
+* pytest
 * PostgreSQL
 * JWT
 * Celery
@@ -29,3 +30,8 @@
    ```
 
 И следуйте указаниям.
+
+Для запуска тестов выполните команду
+   ```shell
+   pytest
+   ```

@@ -41,7 +41,7 @@ class Category(BaseModel):
         verbose_name_plural = "категории"
 
     def __str__(self):
-        return f'{self.name} (ID: {self.id})'
+        return f'{self.name}'
 
 
 class Task(BaseModel):
@@ -60,4 +60,4 @@ class Task(BaseModel):
         verbose_name_plural = "задачи"
 
     def __str__(self):
-        return f'{self.title} (ID: {self.id})'
+        return f'{self.title}'
